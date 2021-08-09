@@ -3,10 +3,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from time import sleep
 from random import randint
-from alive import alive
 from weathercatcher import wc
 
-alive()
 client = discord.Client()
 
 commands = ["*명령어","*검색","*재생","*정지","*일시정지","*다시자생","*삭제"]
