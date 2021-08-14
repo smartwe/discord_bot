@@ -1,4 +1,4 @@
-import discord, bs4, youtube_dl, os
+import discord, bs4, youtube_dl, os, requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from time import sleep
@@ -7,7 +7,81 @@ from weathercatcher import wc
 
 client = discord.Client()
 
-commands = ["*명령어","*검색","*재생","*정지","*일시정지","*다시자생","*삭제"]
+commands = ["명령어", "검색", "뭐할까", "재생", "정지", "일시정지", "다시재생", "퇴장", "삭제", "미세먼지", "기온", "오존", "날씨정보"]
+
+
+def download(url, file_name):
+    with open(file_name, "wb") as file:   # open in binary mode
+        response = requests.get(url)               # get request
+        file.write(response.content) 
+
+
+def tierfinder(word):
+    if word.find('tier/1.svg') != -1:
+        return "브론즈 5"
+    elif word.find('tier/2.svg') != -1:
+        return "브론즈 4"
+    elif word.find('tier/3.svg') != -1:
+        return "브론즈 3"
+    elif word.find('tier/4.svg') != -1:
+        return "브론즈 2"
+    elif word.find('tier/5.svg') != -1:
+        return "브론즈 1"
+    elif word.find('tier/6.svg') != -1:
+        return "실버 5"
+    elif word.find('tier/7.svg') != -1:
+        return "실버 4"
+    elif word.find('tier/8.svg') != -1:
+        return "실버 3"
+    elif word.find('tier/9.svg') != -1:
+        return "실버 2"
+    elif word.find('tier/10.svg') != -1:
+        return "실버 1"
+    elif word.find('tier/11.svg') != -1:
+        return "골드 5"
+    elif word.find('tier/12.svg') != -1:
+        return "골드 4"
+    elif word.find('tier/13.svg') != -1:
+        return "골드 3"
+    elif word.find('tier/14.svg') != -1:
+        return "골드 2"
+    elif word.find('tier/15.svg') != -1:
+        return "골드 1"
+    elif word.find('tier/16.svg') != -1:
+        return "플래티넘 5"
+    elif word.find('tier/17.svg') != -1:
+        return "플래티넘 4"
+    elif word.find('tier/18.svg') != -1:
+        return "플래티넘 3"
+    elif word.find('tier/19.svg') != -1:
+        return "플래티넘 2"
+    elif word.find('tier/20.svg') != -1:
+        return "플래티넘 1"
+    elif word.find('tier/21.svg') != -1:
+        return "다이아몬드 5"
+    elif word.find('tier/22.svg') != -1:
+        return "다이아몬드 4"
+    elif word.find('tier/23.svg') != -1:
+        return "다이아몬드 3"
+    elif word.find('tier/24.svg') != -1:
+        return "다이아몬드 2"
+    elif word.find('tier/25.svg') != -1:
+        return "다이아몬드 1"
+    elif word.find('tier/26.svg') != -1:
+        return "루비 5"
+    elif word.find('tier/27.svg') != -1:
+        return "루비 4"
+    elif word.find('tier/28.svg') != -1:
+        return "루비 3"
+    elif word.find('tier/29.svg') != -1:
+        return "루비 2"
+    elif word.find('tier/30.svg') != -1:
+        return "루비 1"
+    elif word.find('tier/31.svg') != -1:
+        return "마스터"
+    else:
+        return "언랭크"
+
 
 def url_def(text):
   chrome_options = Options()
@@ -43,7 +117,8 @@ def lct(text):
 
 @client.event
 async def on_ready():
-    await client.change_presence(status=discord.Status.online,activity=discord.Game("*명령어"))
+    #await client.change_presence(status=discord.Status.online,activity=discord.Activity(type=discord.ActivityType.listening, name = "*명령어"))
+    await client.change_presence(status=discord.Status.online,activity=discord.Game("[*명령어] 기능 추가"))
 
 @client.event
 async def on_message(message):
@@ -56,6 +131,19 @@ async def on_message(message):
             if vc.guild == message.guild:
                 voice = vc
       return voice
+
+    if message.content== "*ps":
+        await channel.send("0:봇 사용\n1:기능 추가")
+
+    if message.content.startswith("*ps0811"):
+      text = message.content.lstrip("*ps0811")
+      print(text)
+      if text == " 0":
+        await client.change_presence(status=discord.Status.online,activity=discord.Activity(type=discord.ActivityType.listening, name = "*명령어"))
+        await channel.send("바뀜!")
+      elif text == " 1":
+        await client.change_presence(status=discord.Status.online,activity=discord.Game("[*명령어] 기능 추가"))
+        await channel.send("바뀜!")
 
     if message.content.startswith("*미세먼지"):
       location = message.content.lstrip("*미세먼지 ")
@@ -167,6 +255,7 @@ async def on_message(message):
             await channel.send("음성 채널에 입장하여 주세요!")
           else:
             await channel.send("오류 발생!")
+            
     if message.content == "*뭐할까":
         try_list = [
             "게임 하는 것은 어떠신가요?", "오늘은 영화를 보세요!", "취미를 찾아보세요!",
@@ -196,6 +285,43 @@ async def on_message(message):
         text = text_split(text2)
         url = url_def(text)
         await channel.send(url)
+    if message.content.startswith("*백준문제"):
+      id = message.content.lstrip("*백준문제 ")
+      boj = requests.get("https://www.acmicpc.net/problem/" + id)
+      html = boj.text
+      soup = bs4.BeautifulSoup(html, "html.parser")
+      q = soup.select_one("#problem_description > p").text
+      inq = soup.select_one("#problem_input > p").text
+      outq = soup.select_one("#problem_output > p").text
+      embed = discord.Embed(title = "[boj 정보]", color = discord.Color.blue())
+      embed.add_field(name = "문제", value = q, inline=False)
+      embed.add_field(name = "입력", value = inq, inline=False)
+      embed.add_field(name = "출력", value = outq, inline=False)
+      await channel.send(embed = embed)
+
+    if message.content.startswith("*백준 "):
+      id = message.content.lstrip("*백준 ")
+      boj = requests.get("https://www.acmicpc.net/user/" + id)
+      html = boj.text
+      soup = bs4.BeautifulSoup(html, "html.parser")
+      rank = soup.find('img' , {'class' : 'solvedac-tier'}).text
+      status = soup.find('blockquote' , {'class' : 'no-mathjax'}).text
+      bojrank = soup.select_one("#statics > tbody > tr:nth-child(1) > td").text
+      cq1 = soup.select_one("#u-solved").text
+      wq1 = soup.select_one("#u-result-6").text
+      wq2 = soup.select_one("body > div.wrapper > div.container.content > div.row > div:nth-child(2) > div > div.col-md-9 > div:nth-child(2) > div.panel-body").text
+      src = rank.attrs['src']
+      download(src,"image.svg")
+      os.system("cairosvg image.svg -o image.png")
+      image = discord.File("image.png", filename="rank.png")
+      embed = discord.Embed(title = "[boj 정보]", color = discord.Color.blue())
+      embed.add_field(name = "상태매세지", value = status, inline=False)
+      embed.add_field(name = "백준 랭크", value = bojrank, inline=False)
+      embed.add_field(name = "맞은 문제수", value = cq1, inline=False)
+      embed.add_field(name = "틀린 횟수", value = wq1, inline = False)
+      embed.add_field(name = "틀린 문제", value = wq2, inline = False)
+      embed.set_thumbnail(url = "attachment://rank.png")
+      await channel.send(embed=embed, file=image)
 
     if message.content == "*명령어":
         embed = discord.Embed(title="명령어 목록", colour=discord.Color.red())
@@ -207,5 +333,8 @@ async def on_message(message):
         embed.add_field(name="*재생", value="음악을 재생합니다. 예) *재생 링크", inline=True)
         embed.add_field(name="재생 관련 명령어", value="`*정지`, `*일시정지`, `*다시재생`, `*퇴장`")
         await channel.send(embed=embed)
+
+    if message.content == "*명령어정보":
+      await channel.send(commands)
 
 client.run(os.environ['token'])
